@@ -24,7 +24,7 @@ An interactive travel price tracking dashboard built with HTML, Tailwind CSS, Ja
 
 1. Open the project folder in VS Code.
 2. Open `index.html`.
-3. Use the Live Server extension, or open `index.html` directly in a browser.
+3. Use the Live Server extension, or open `index.html` directly in a browser. 
 
 ## Data Notice
 
@@ -32,4 +32,4 @@ The displayed prices are simulated for demonstration and educational purposes. T
 
 ## Author
 
-Your Name
+Emmanuel Kuh
