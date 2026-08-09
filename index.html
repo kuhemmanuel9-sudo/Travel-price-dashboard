@@ -1,0 +1,3972 @@
+
+```html
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="EMMANUEL'S TRAVEL PULSE — interactive travel price tracking dashboard for flights and hotels."
+  />
+  <meta name="author" content="EMMANUEL KUH" />
+
+  <title>EMMANUEL'S TRAVEL PULSE— Travel Price Tracker</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            ocean: {
+              50: "#effcfb",
+              100: "#ccf7f4",
+              200: "#9aeee8",
+              300: "#5edfd8",
+              400: "#2dc7c2",
+              500: "#14aaa7",
+              600: "#0e8988",
+              700: "#0f6d6e",
+              800: "#115758",
+              900: "#12494a"
+            },
+            midnight: {
+              900: "#07111f",
+              950: "#030914"
+            }
+          },
+          boxShadow: {
+            soft: "0 20px 60px rgba(15, 23, 42, 0.08)",
+            glow: "0 18px 50px rgba(20, 170, 167, 0.20)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --page-bg: #f4f8fc;
+      --panel-bg: rgba(255, 255, 255, 0.88);
+      --panel-border: rgba(148, 163, 184, 0.20);
+      --muted-text: #64748b;
+      --chart-text: #475569;
+      --chart-grid: rgba(148, 163, 184, 0.18);
+      --tooltip-bg: rgba(7, 17, 31, 0.96);
+    }
+
+    html.dark {
+      color-scheme: dark;
+      --page-bg: #030914;
+      --panel-bg: rgba(10, 20, 36, 0.88);
+      --panel-border: rgba(148, 163, 184, 0.14);
+      --muted-text: #94a3b8;
+      --chart-text: #cbd5e1;
+      --chart-grid: rgba(148, 163, 184, 0.12);
+      --tooltip-bg: rgba(2, 6, 23, 0.98);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page-bg);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      transition:
+        background-color 250ms ease,
+        color 250ms ease;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .page-background {
+      background:
+        radial-gradient(
+          circle at 88% 4%,
+          rgba(45, 199, 194, 0.12),
+          transparent 25rem
+        ),
+        radial-gradient(
+          circle at 50% 110%,
+          rgba(37, 99, 235, 0.12),
+          transparent 32rem
+        );
+    }
+
+    .dark .page-background {
+      background:
+        radial-gradient(
+          circle at 88% 4%,
+          rgba(45, 199, 194, 0.12),
+          transparent 28rem
+        ),
+        radial-gradient(
+          circle at 50% 110%,
+          rgba(37, 99, 235, 0.11),
+          transparent 35rem
+        );
+    }
+
+    .glass-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.07);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        transform 200ms ease,
+        box-shadow 200ms ease;
+    }
+
+    .dark .glass-panel {
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+    }
+
+    .glass-panel-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 68px rgba(15, 23, 42, 0.11);
+    }
+
+    .dark .glass-panel-hover:hover {
+      box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+    }
+
+    .control {
+      width: 100%;
+      min-height: 46px;
+      appearance: none;
+      border: 1px solid rgba(148, 163, 184, 0.30);
+      border-radius: 14px;
+      background-color: rgba(248, 250, 252, 0.88);
+      color: #0f172a;
+      padding: 0 2.7rem 0 0.9rem;
+      outline: none;
+      transition:
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        background-color 180ms ease;
+    }
+
+    .control:hover {
+      border-color: rgba(20, 170, 167, 0.55);
+    }
+
+    .control:focus {
+      border-color: #14aaa7;
+      box-shadow: 0 0 0 4px rgba(20, 170, 167, 0.13);
+    }
+
+    .dark .control {
+      border-color: rgba(148, 163, 184, 0.18);
+      background-color: rgba(15, 23, 42, 0.75);
+      color: #f8fafc;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-right: 2px solid #64748b;
+      border-bottom: 2px solid #64748b;
+      pointer-events: none;
+      transform: translateY(-65%) rotate(45deg);
+    }
+
+    .dark .select-wrapper::after {
+      border-color: #94a3b8;
+    }
+
+    .range-input {
+      width: 100%;
+      height: 6px;
+      appearance: none;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #14aaa7, #2563eb);
+      outline: none;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      width: 19px;
+      height: 19px;
+      appearance: none;
+      border: 3px solid #ffffff;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+      cursor: pointer;
+    }
+
+    .range-input::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border: 3px solid #ffffff;
+      border-radius: 999px;
+      background: #0f766e;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+      cursor: pointer;
+    }
+
+    .toggle-track {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: background-color 180ms ease;
+    }
+
+    .toggle-track::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.22);
+      transition: transform 180ms ease;
+    }
+
+    input:checked + .toggle-track {
+      background: linear-gradient(135deg, #14aaa7, #2563eb);
+    }
+
+    input:checked + .toggle-track::after {
+      transform: translateX(20px);
+    }
+
+    .simulate-button {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(
+        135deg,
+        #0f766e 0%,
+        #0e7490 52%,
+        #1d4ed8 100%
+      );
+      transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        filter 180ms ease;
+    }
+
+    .simulate-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        115deg,
+        transparent 25%,
+        rgba(255, 255, 255, 0.22) 48%,
+        transparent 72%
+      );
+      transform: translateX(-120%);
+      transition: transform 600ms ease;
+    }
+
+    .simulate-button:hover::before {
+      transform: translateX(120%);
+    }
+
+    .simulate-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 40px rgba(14, 116, 144, 0.30);
+      filter: saturate(1.08);
+    }
+
+    .simulate-button:active {
+      transform: translateY(0);
+    }
+
+    .simulate-button.promo-active {
+      background: linear-gradient(
+        135deg,
+        #047857 0%,
+        #0f766e 45%,
+        #0369a1 100%
+      );
+      box-shadow: 0 18px 40px rgba(5, 150, 105, 0.25);
+    }
+
+    .chart-shell {
+      position: relative;
+      min-height: 320px;
+      height: 340px;
+    }
+
+    .chart-shell-large {
+      min-height: 350px;
+      height: 380px;
+    }
+
+    .metric-value {
+      letter-spacing: -0.04em;
+    }
+
+    .status-pulse {
+      position: relative;
+    }
+
+    .status-pulse::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 999px;
+      border: 2px solid currentColor;
+      opacity: 0;
+      animation: statusPulse 2s ease-out infinite;
+    }
+
+    @keyframes statusPulse {
+      0% {
+        transform: scale(0.7);
+        opacity: 0.55;
+      }
+
+      70% {
+        transform: scale(1.6);
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .toast-visible {
+      transform: translateY(0) !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    .skeleton-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-shimmer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        100deg,
+        transparent 25%,
+        rgba(255, 255, 255, 0.22) 45%,
+        transparent 65%
+      );
+      transform: translateX(-100%);
+      animation: shimmer 2.6s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: rgba(100, 116, 139, 0.35);
+    }
+
+    @media (max-width: 1023px) {
+      .sidebar-open {
+        transform: translateX(0) !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .chart-shell,
+      .chart-shell-large {
+        height: 310px;
+        min-height: 290px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-950 antialiased dark:bg-midnight-950 dark:text-slate-100">
+
+  <div class="page-background fixed inset-0 -z-20"></div>
+
+  <div
+    class="pointer-events-none fixed -right-28 -top-28 -z-10 h-96 w-96 rounded-full bg-teal-400/10 blur-3xl"
+  ></div>
+
+  <div
+    class="pointer-events-none fixed -bottom-40 left-1/3 -z-10 h-[32rem] w-[32rem] rounded-full bg-blue-600/10 blur-3xl"
+  ></div>
+
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div
+    id="sidebarOverlay"
+    class="fixed inset-0 z-40 hidden bg-slate-950/60 backdrop-blur-sm lg:hidden"
+    aria-hidden="true"
+  ></div>
+
+  <!-- SIDEBAR -->
+  <aside
+    id="sidebar"
+    class="custom-scrollbar fixed inset-y-0 left-0 z-50 flex w-[20rem] -translate-x-full flex-col overflow-y-auto border-r border-slate-200/70 bg-white/95 px-5 py-5 shadow-2xl backdrop-blur-2xl transition-transform duration-300 dark:border-slate-800/80 dark:bg-slate-950/95 lg:translate-x-0 lg:shadow-none"
+    aria-label="Travel tracking filters"
+  >
+
+    <div class="mb-7 flex items-center justify-between">
+
+      <div class="flex items-center gap-3">
+
+        <div
+          class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-700 text-white shadow-glow"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 11.5 21 4l-7.5 18-2.7-7.8L3 11.5Z"></path>
+            <path d="m10.8 14.2 4.6-4.6"></path>
+          </svg>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <h1
+              class="text-base font-black tracking-tight text-slate-950 dark:text-white"
+            >
+              Emmanuel's Travel Pulse
+            </h1>
+
+            <span
+              class="rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-teal-700 dark:bg-teal-400/10 dark:text-teal-300"
+            >
+              Beta
+            </span>
+          </div>
+
+          <p
+            class="text-xs font-medium text-slate-500 dark:text-slate-400"
+          >
+            Smart Travel Price Analytics
+          </p>
+        </div>
+      </div>
+
+      <button
+        id="closeSidebar"
+        type="button"
+        class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden"
+        aria-label="Close filters"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M6 6 18 18M18 6 6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="mb-5">
+
+      <div class="mb-1 flex items-center justify-between">
+        <h2
+          class="text-sm font-extrabold text-slate-900 dark:text-white"
+        >
+          Tracking filters
+        </h2>
+
+        <span
+          class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+        >
+          <span
+            class="status-pulse h-1.5 w-1.5 rounded-full bg-emerald-500"
+          ></span>
+          Live
+        </span>
+      </div>
+
+      <p
+        class="text-xs leading-5 text-slate-500 dark:text-slate-400"
+      >
+        Compare simulated flight and hotel pricing signals.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+
+      <div>
+        <label
+          for="routeSelect"
+          class="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+        >
+          Saved route
+        </label>
+
+        <div class="select-wrapper">
+          <select id="routeSelect" class="control"></select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+
+        <div>
+          <label
+            for="originSelect"
+            class="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+          >
+            Origin
+          </label>
+
+          <div class="select-wrapper">
+            <select id="originSelect" class="control"></select>
+          </div>
+        </div>
+
+        <div>
+          <label
+            for="destinationSelect"
+            class="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+          >
+            Destination
+          </label>
+
+          <div class="select-wrapper">
+            <select id="destinationSelect" class="control"></select>
+          </div>
+        </div>
+
+      </div>
+
+      <div>
+        <label
+          for="monthSelect"
+          class="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+        >
+          Travel month
+        </label>
+
+        <div class="select-wrapper">
+          <select id="monthSelect" class="control"></select>
+        </div>
+      </div>
+
+      <div
+        class="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+      >
+
+        <div class="mb-3 flex items-start justify-between gap-3">
+
+          <div>
+            <label
+              for="targetFare"
+              class="block text-xs font-extrabold text-slate-800 dark:text-slate-100"
+            >
+              Target flight fare
+            </label>
+
+            <p
+              class="mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400"
+            >
+              Notify me when prices fall below this amount.
+            </p>
+          </div>
+
+          <span
+            id="targetFareValue"
+            class="shrink-0 rounded-lg bg-white px-2.5 py-1 text-xs font-black text-teal-700 shadow-sm dark:bg-slate-800 dark:text-teal-300"
+          >
+            $520
+          </span>
+        </div>
+
+        <input
+          id="targetFare"
+          class="range-input"
+          type="range"
+          min="300"
+          max="900"
+          step="10"
+          value="520"
+        />
+
+        <div
+          class="mt-2 flex justify-between text-[10px] font-semibold text-slate-400"
+        >
+          <span>Budget</span>
+          <span>Flexible</span>
+        </div>
+
+      </div>
+
+      <label
+        class="flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4 transition hover:border-teal-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-teal-700"
+      >
+
+        <span>
+          <span
+            class="block text-xs font-extrabold text-slate-800 dark:text-slate-100"
+          >
+            Price alerts
+          </span>
+
+          <span
+            class="mt-1 block text-[11px] text-slate-500 dark:text-slate-400"
+          >
+            Monitor this route automatically
+          </span>
+        </span>
+
+        <span class="relative">
+          <input
+            id="alertsToggle"
+            type="checkbox"
+            class="peer sr-only"
+            checked
+          />
+          <span class="toggle-track block"></span>
+        </span>
+
+      </label>
+
+      <button
+        id="simulateBtn"
+        type="button"
+        class="simulate-button w-full rounded-2xl px-4 py-4 text-left text-white shadow-glow"
+      >
+
+        <span class="relative z-10 flex items-center gap-3">
+
+          <span
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 7h16"></path>
+              <path d="m7 4-3 3 3 3"></path>
+              <path d="M20 17H4"></path>
+              <path d="m17 14 3 3-3 3"></path>
+              <path d="m8 13 3 3 5-7"></path>
+            </svg>
+          </span>
+
+          <span>
+            <span
+              id="simulateBtnLabel"
+              class="block text-sm font-black"
+            >
+              Simulate Price Drop
+            </span>
+
+            <span
+              id="simulateBtnSubtext"
+              class="mt-0.5 block text-[11px] leading-4 text-white/75"
+            >
+              Apply promotional flight and hotel fares
+            </span>
+          </span>
+
+        </span>
+      </button>
+
+    </div>
+
+    <div class="mt-auto pt-7">
+
+      <div
+        class="rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50 to-teal-50 p-4 dark:border-blue-900/50 dark:from-blue-950/60 dark:to-teal-950/40"
+      >
+
+        <div class="mb-2 flex items-center gap-2">
+
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            class="h-4 w-4 text-blue-600 dark:text-blue-300"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 10v6"></path>
+            <path d="M12 7h.01"></path>
+          </svg>
+
+          <span
+            class="text-xs font-extrabold text-blue-950 dark:text-blue-100"
+          >
+            Demonstration data
+          </span>
+
+        </div>
+
+        <p
+          class="text-[11px] leading-5 text-blue-800/75 dark:text-blue-200/70"
+        >
+          Prices are generated in-browser to demonstrate dashboard behavior
+          and are not live booking quotes.
+        </p>
+
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="min-h-screen lg:pl-[20rem]">
+
+    <!-- HEADER -->
+    <header
+      class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/78 backdrop-blur-2xl dark:border-slate-800/75 dark:bg-slate-950/72"
+    >
+
+      <div
+        class="flex min-h-[72px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-8"
+      >
+
+        <div class="flex min-w-0 items-center gap-3">
+
+          <button
+            id="openSidebar"
+            type="button"
+            class="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:border-teal-300 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 lg:hidden"
+            aria-label="Open tracking filters"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <div class="min-w-0">
+
+            <div class="flex items-center gap-2">
+
+              <h2
+                class="truncate text-base font-black tracking-tight text-slate-950 dark:text-white sm:text-lg"
+              >
+                Emmanuel's Travel Pulse
+              </h2>
+
+              <span
+                id="headerRouteBadge"
+                class="hidden rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:inline-flex"
+              >
+                JFK → LHR
+              </span>
+
+            </div>
+
+            <p
+              id="lastUpdated"
+              class="mt-0.5 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400"
+            >
+              Updated just now
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="flex shrink-0 items-center gap-2">
+
+          <div
+            class="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex"
+          >
+            <span
+              class="status-pulse h-2 w-2 rounded-full bg-emerald-500 text-emerald-500"
+            ></span>
+            Market feed active
+          </div>
+
+          <button
+            id="themeToggle"
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            aria-label="Switch color theme"
+          >
+
+            <svg
+              id="moonIcon"
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+            >
+              <path
+                d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5 8.7 8.7 0 1 0 20.5 14.2Z"
+              ></path>
+            </svg>
+
+            <svg
+              id="sunIcon"
+              viewBox="0 0 24 24"
+              class="hidden h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.9"
+            >
+              <circle cx="12" cy="12" r="4"></circle>
+              <path
+                d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41"
+              ></path>
+              <path
+                d="M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"
+              ></path>
+            </svg>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+
+    <div
+      class="mx-auto max-w-[1600px] space-y-6 px-4 py-5 sm:px-6 sm:py-7 xl:px-8"
+    >
+
+      <!-- HERO -->
+      <section
+        class="skeleton-shimmer relative overflow-hidden rounded-[28px] border border-blue-800/30 bg-gradient-to-br from-slate-950 via-blue-950 to-teal-900 px-5 py-6 text-white shadow-2xl sm:px-7 sm:py-7"
+      >
+
+        <div
+          class="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-400/15 blur-3xl"
+        ></div>
+
+        <div
+          class="pointer-events-none absolute bottom-[-7rem] left-1/3 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl"
+        ></div>
+
+        <div
+          class="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end"
+        >
+
+          <div>
+
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+
+              <span
+                id="marketStatus"
+                class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-extrabold backdrop-blur"
+              >
+                <span
+                  class="status-pulse h-2 w-2 rounded-full bg-teal-300 text-teal-300"
+                ></span>
+                Monitoring market prices
+              </span>
+
+              <span
+                id="heroMonthBadge"
+                class="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-blue-100 backdrop-blur"
+              >
+                August travel
+              </span>
+
+            </div>
+
+            <p
+              class="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-teal-200"
+            >
+              Current tracked itinerary
+            </p>
+
+            <h3
+              id="heroRoute"
+              class="max-w-3xl text-3xl font-black tracking-[-0.045em] sm:text-4xl xl:text-5xl"
+            >
+              New York to London
+            </h3>
+
+            <p
+              id="heroMeta"
+              class="mt-3 max-w-2xl text-sm font-medium leading-6 text-blue-100/75"
+            >
+              JFK → LHR · Transatlantic · Economy flight + 4-star hotel
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+
+              <div
+                class="rounded-2xl border border-white/12 bg-white/8 px-4 py-3 backdrop-blur"
+              >
+                <p
+                  class="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-200/70"
+                >
+                  Forecast confidence
+                </p>
+
+                <p
+                  id="forecastConfidence"
+                  class="mt-1 text-sm font-black text-white"
+                >
+                  High · 88%
+                </p>
+              </div>
+
+              <div
+                class="rounded-2xl border border-white/12 bg-white/8 px-4 py-3 backdrop-blur"
+              >
+                <p
+                  class="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-200/70"
+                >
+                  Recommended action
+                </p>
+
+                <p
+                  id="heroRecommendation"
+                  class="mt-1 text-sm font-black text-white"
+                >
+                  Watch for 48 hours
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div
+            class="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl lg:text-right"
+          >
+
+            <div
+              class="flex items-start justify-between gap-4 lg:flex-col lg:items-end"
+            >
+
+              <div>
+                <p
+                  id="heroSavingsLabel"
+                  class="text-xs font-bold uppercase tracking-[0.16em] text-teal-200"
+                >
+                  Potential savings
+                </p>
+
+                <p
+                  id="heroSavings"
+                  class="mt-2 text-4xl font-black tracking-[-0.05em] text-white"
+                >
+                  $126
+                </p>
+              </div>
+
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-300/15 text-teal-200 ring-1 ring-teal-200/20"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M4 5v14h16"></path>
+                  <path d="m7 15 4-4 3 2 5-6"></path>
+                </svg>
+              </div>
+
+            </div>
+
+            <p
+              id="heroSavingsDetail"
+              class="mt-3 text-xs leading-5 text-blue-100/65 lg:ml-auto lg:max-w-xs"
+            >
+              Compared with the seasonal route baseline for your selected month.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- KPI CARDS -->
+      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <article
+          class="glass-panel glass-panel-hover rounded-3xl p-5"
+        >
+          <div class="mb-5 flex items-start justify-between gap-3">
+
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-blue-400/10 dark:text-blue-300"
+            >
+              ✈
+            </div>
+
+            <span
+              id="flightSignal"
+              class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            >
+              Good value
+            </span>
+
+          </div>
+
+          <p
+            class="text-xs font-bold text-slate-500 dark:text-slate-400"
+          >
+            Lowest Flight Found
+          </p>
+
+          <p
+            id="lowestFlight"
+            class="metric-value mt-2 text-3xl font-black text-slate-950 dark:text-white"
+          >
+            $498
+          </p>
+
+          <span
+            id="flightDelta"
+            class="mt-3 block text-xs font-extrabold text-emerald-600 dark:text-emerald-400"
+          >
+            12% below baseline
+          </span>
+        </article>
+
+        <article
+          class="glass-panel glass-panel-hover rounded-3xl p-5"
+        >
+
+          <div class="mb-5 flex items-start justify-between gap-3">
+
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
+            >
+              🏨
+            </div>
+
+            <span
+              class="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-extrabold uppercase text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
+            >
+              Nightly
+            </span>
+
+          </div>
+
+          <p
+            class="text-xs font-bold text-slate-500 dark:text-slate-400"
+          >
+            Average Nightly Hotel Rate
+          </p>
+
+          <p
+            id="avgHotel"
+            class="metric-value mt-2 text-3xl font-black text-slate-950 dark:text-white"
+          >
+            $228
+          </p>
+
+          <span
+            id="hotelDelta"
+            class="mt-3 block text-xs font-extrabold text-slate-500 dark:text-slate-400"
+          >
+            4-star market average
+          </span>
+
+        </article>
+
+        <article
+          class="glass-panel glass-panel-hover rounded-3xl p-5"
+        >
+
+          <div class="mb-5 flex items-start justify-between gap-3">
+
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
+            >
+              ◷
+            </div>
+
+            <span
+              class="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-extrabold uppercase text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
+            >
+              Forecast
+            </span>
+
+          </div>
+
+          <p
+            class="text-xs font-bold text-slate-500 dark:text-slate-400"
+          >
+            Best Booking Window Advice
+          </p>
+
+          <p
+            id="bookingWindow"
+            class="metric-value mt-2 text-2xl font-black leading-tight text-slate-950 dark:text-white"
+          >
+            45–60 days out
+          </p>
+
+          <span
+            id="bookingHint"
+            class="mt-3 block text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400"
+          >
+            Midweek departures currently offer stronger value.
+          </span>
+
+        </article>
+
+        <article
+          id="alertCard"
+          class="glass-panel glass-panel-hover rounded-3xl p-5"
+        >
+
+          <div class="mb-5 flex items-start justify-between gap-3">
+
+            <div
+              id="alertIcon"
+              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            >
+              ♢
+            </div>
+
+            <span
+              id="alertStateBadge"
+              class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            >
+              <span
+                id="alertStateDot"
+                class="status-pulse h-1.5 w-1.5 rounded-full bg-emerald-500"
+              ></span>
+              Active
+            </span>
+
+          </div>
+
+          <p
+            class="text-xs font-bold text-slate-500 dark:text-slate-400"
+          >
+            Price Alert Status
+          </p>
+
+          <p
+            id="alertStatus"
+            class="metric-value mt-2 text-2xl font-black text-slate-950 dark:text-white"
+          >
+            Monitoring
+          </p>
+
+          <span
+            id="alertDetail"
+            class="mt-3 block text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400"
+          >
+            Alert set below $520.
+          </span>
+
+        </article>
+
+      </section>
+
+      <!-- TREND CHART -->
+      <section class="glass-panel rounded-3xl p-4 sm:p-6">
+
+        <div
+          class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+        >
+
+          <div>
+
+            <div class="mb-2 flex items-center gap-2">
+
+              <span
+                class="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-blue-700 dark:bg-blue-400/10 dark:text-blue-300"
+              >
+                30-day signal
+              </span>
+
+              <span
+                id="trendRouteLabel"
+                class="text-[11px] font-bold text-slate-400 dark:text-slate-500"
+              >
+                JFK → LHR
+              </span>
+
+            </div>
+
+            <h3
+              class="text-lg font-black tracking-tight text-slate-950 dark:text-white"
+            >
+              Flight Price Trends vs Hotel Price Trends
+            </h3>
+
+            <p
+              id="trendSubtitle"
+              class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+            >
+              Daily observed market pricing for the selected route and month.
+            </p>
+
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+
+            <span
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <span
+                class="h-2.5 w-2.5 rounded-full bg-teal-500"
+              ></span>
+              Flight fare
+            </span>
+
+            <span
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <span
+                class="h-2.5 w-2.5 rounded-full bg-violet-500"
+              ></span>
+              Hotel nightly rate
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="chart-shell chart-shell-large">
+          <canvas id="trendChart"></canvas>
+        </div>
+
+      </section>
+
+      <!-- SECONDARY CHARTS -->
+      <section class="grid gap-6 xl:grid-cols-2">
+
+        <article class="glass-panel rounded-3xl p-4 sm:p-6">
+
+          <span
+            class="rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-teal-700 dark:bg-teal-400/10 dark:text-teal-300"
+          >
+            Supplier comparison
+          </span>
+
+          <h3
+            class="mt-3 text-lg font-black tracking-tight text-slate-950 dark:text-white"
+          >
+            Airline & Hotel Chain Prices
+          </h3>
+
+          <p
+            class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+          >
+            Estimated lead prices for major providers on this itinerary.
+          </p>
+
+          <div class="chart-shell mt-5">
+            <canvas id="supplierChart"></canvas>
+          </div>
+
+        </article>
+
+        <article class="glass-panel rounded-3xl p-4 sm:p-6">
+
+          <span
+            class="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-300"
+          >
+            Booking window model
+          </span>
+
+          <h3
+            class="mt-3 text-lg font-black tracking-tight text-slate-950 dark:text-white"
+          >
+            Price vs Days Until Departure
+          </h3>
+
+          <p
+            class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+          >
+            Bubble size represents modeled price volatility.
+          </p>
+
+          <div class="chart-shell mt-5">
+            <canvas id="departureChart"></canvas>
+          </div>
+
+        </article>
+
+      </section>
+
+      <!-- SUMMARY -->
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+        <article
+          class="rounded-3xl border border-slate-200/70 bg-white/75 p-5 shadow-soft backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/65"
+        >
+          <p
+            class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400"
+          >
+            Lowest airline
+          </p>
+
+          <p
+            id="airlineLowest"
+            class="mt-2 text-lg font-black text-slate-950 dark:text-white"
+          >
+            JetBlue · $522
+          </p>
+
+          <p
+            class="mt-1 text-xs text-slate-500 dark:text-slate-400"
+          >
+            Lowest estimated round-trip fare
+          </p>
+        </article>
+
+        <article
+          class="rounded-3xl border border-slate-200/70 bg-white/75 p-5 shadow-soft backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/65"
+        >
+          <p
+            class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400"
+          >
+            Lowest hotel
+          </p>
+
+          <p
+            id="hotelLowest"
+            class="mt-2 text-lg font-black text-slate-950 dark:text-white"
+          >
+            Premier Inn · $174
+          </p>
+
+          <p
+            class="mt-1 text-xs text-slate-500 dark:text-slate-400"
+          >
+            Lowest estimated nightly rate
+          </p>
+        </article>
+
+        <article
+          class="rounded-3xl border border-slate-200/70 bg-white/75 p-5 shadow-soft backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/65"
+        >
+          <p
+            class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400"
+          >
+            Modeled sweet spot
+          </p>
+
+          <p
+            id="optimalDays"
+            class="mt-2 text-lg font-black text-slate-950 dark:text-white"
+          >
+            52 days before departure
+          </p>
+
+          <p
+            class="mt-1 text-xs text-slate-500 dark:text-slate-400"
+          >
+            Lowest point in timing model
+          </p>
+        </article>
+
+        <article
+          class="rounded-3xl border border-slate-200/70 bg-white/75 p-5 shadow-soft backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/65"
+        >
+          <p
+            class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400"
+          >
+            Price volatility
+          </p>
+
+          <p
+            id="volatilityLevel"
+            class="mt-2 text-lg font-black text-slate-950 dark:text-white"
+          >
+            Moderate · 8.2%
+          </p>
+
+          <p
+            id="insightText"
+            class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+          >
+            Fares are moving, but no sharp demand spike is present.
+          </p>
+        </article>
+
+      </section>
+
+      <!-- FOOTER -->
+      <footer
+        class="flex flex-col gap-2 border-t border-slate-200/70 py-5 text-[11px] font-medium text-slate-400 dark:border-slate-800/70 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p>
+          EMMANUEL'S TRAVEL PULSE · Travel Analytics Dashboard · Simulated demonstration pricing
+        </p>
+
+        <p>
+          Designed by EMMANUEL KUH· Powered by Chart.js
+        </p>
+      </footer>
+
+    </div>
+
+  </main>
+
+  <!-- TOAST -->
+  <div
+    id="toast"
+    class="pointer-events-none fixed bottom-5 right-4 z-[70] w-[calc(100%-2rem)] max-w-sm translate-y-5 rounded-2xl border border-slate-200 bg-white/95 p-4 opacity-0 shadow-2xl backdrop-blur-xl transition duration-300 dark:border-slate-700 dark:bg-slate-900/95 sm:right-6"
+    role="status"
+    aria-live="polite"
+  >
+
+    <div class="flex items-start gap-3">
+
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-400/10 dark:text-teal-300"
+      >
+        ✓
+      </div>
+
+      <div>
+        <p
+          id="toastTitle"
+          class="text-sm font-black text-slate-950 dark:text-white"
+        >
+          Prices updated
+        </p>
+
+        <p
+          id="toastMessage"
+          class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+        >
+          Promotional pricing has been applied.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    (() => {
+      "use strict";
+
+      const ROUTES = {
+        "nyc-lon": {
+          label: "New York → London",
+          origin: {
+            city: "New York",
+            code: "JFK"
+          },
+          destination: {
+            city: "London",
+            code: "LHR"
+          },
+          region: "Transatlantic",
+          baseFlight: 612,
+          baseHotel: 246,
+          alertTarget: 520,
+          bookingWindow: "45–60 days out",
+          bookingHint:
+            "Tuesday and Wednesday departures are trending lower.",
+          confidence: 88,
+          airlines: [
+            "JetBlue",
+            "British Airways",
+            "Virgin Atlantic",
+            "United"
+          ],
+          airlineFactors: [
+            0.89,
+            1.08,
+            1.02,
+            0.97
+          ],
+          hotels: [
+            "Hilton",
+            "Marriott",
+            "Premier Inn",
+            "Hyatt"
+          ],
+          hotelFactors: [
+            1.04,
+            1.12,
+            0.72,
+            1.08
+          ],
+          seasonality: [
+            0.84,
+            0.86,
+            0.92,
+            1.01,
+            1.10,
+            1.19,
+            1.25,
+            1.22,
+            1.07,
+            0.97,
+            0.90,
+            1.16
+          ]
+        },
+
+        "lax-tok": {
+          label: "Los Angeles → Tokyo",
+          origin: {
+            city: "Los Angeles",
+            code: "LAX"
+          },
+          destination: {
+            city: "Tokyo",
+            code: "NRT"
+          },
+          region: "Transpacific",
+          baseFlight: 824,
+          baseHotel: 192,
+          alertTarget: 690,
+          bookingWindow: "60–75 days out",
+          bookingHint:
+            "Book earlier for cherry blossom and autumn travel.",
+          confidence: 84,
+          airlines: [
+            "ZIPAIR",
+            "ANA",
+            "Japan Airlines",
+            "United"
+          ],
+          airlineFactors: [
+            0.77,
+            1.10,
+            1.08,
+            0.96
+          ],
+          hotels: [
+            "APA Hotels",
+            "Hilton",
+            "Marriott",
+            "Hyatt"
+          ],
+          hotelFactors: [
+            0.66,
+            1.07,
+            1.14,
+            1.02
+          ],
+          seasonality: [
+            0.88,
+            0.91,
+            1.20,
+            1.28,
+            1.04,
+            0.96,
+            1.03,
+            1.08,
+            0.99,
+            1.18,
+            1.02,
+            1.15
+          ]
+        },
+
+        "chi-par": {
+          label: "Chicago → Paris",
+          origin: {
+            city: "Chicago",
+            code: "ORD"
+          },
+          destination: {
+            city: "Paris",
+            code: "CDG"
+          },
+          region: "Transatlantic",
+          baseFlight: 688,
+          baseHotel: 221,
+          alertTarget: 575,
+          bookingWindow: "50–65 days out",
+          bookingHint:
+            "Late-April and October departures show softer demand.",
+          confidence: 86,
+          airlines: [
+            "Air France",
+            "United",
+            "American",
+            "Icelandair"
+          ],
+          airlineFactors: [
+            1.05,
+            0.98,
+            0.95,
+            0.84
+          ],
+          hotels: [
+            "Accor",
+            "Marriott",
+            "Hilton",
+            "Hyatt"
+          ],
+          hotelFactors: [
+            0.81,
+            1.12,
+            1.03,
+            1.08
+          ],
+          seasonality: [
+            0.86,
+            0.88,
+            0.95,
+            1.02,
+            1.12,
+            1.22,
+            1.26,
+            1.20,
+            1.06,
+            0.94,
+            0.89,
+            1.17
+          ]
+        },
+
+        "atl-dub": {
+          label: "Atlanta → Dublin",
+          origin: {
+            city: "Atlanta",
+            code: "ATL"
+          },
+          destination: {
+            city: "Dublin",
+            code: "DUB"
+          },
+          region: "Transatlantic",
+          baseFlight: 720,
+          baseHotel: 185,
+          alertTarget: 600,
+          bookingWindow: "45–70 days out",
+          bookingHint:
+            "Spring and autumn departures often provide better value.",
+          confidence: 84,
+          airlines: [
+            "Delta",
+            "Aer Lingus",
+            "United",
+            "British Airways"
+          ],
+          airlineFactors: [
+            0.95,
+            0.90,
+            1.05,
+            1.08
+          ],
+          hotels: [
+            "Clayton",
+            "Hilton",
+            "Marriott",
+            "Maldron"
+          ],
+          hotelFactors: [
+            0.82,
+            1.08,
+            1.12,
+            0.87
+          ],
+          seasonality: [
+            0.88,
+            0.90,
+            0.96,
+            1.02,
+            1.10,
+            1.18,
+            1.22,
+            1.17,
+            1.01,
+            0.93,
+            0.89,
+            1.14
+          ]
+        },
+
+        "mia-bcn": {
+          label: "Miami → Barcelona",
+          origin: {
+            city: "Miami",
+            code: "MIA"
+          },
+          destination: {
+            city: "Barcelona",
+            code: "BCN"
+          },
+          region: "Transatlantic",
+          baseFlight: 598,
+          baseHotel: 207,
+          alertTarget: 495,
+          bookingWindow: "40–55 days out",
+          bookingHint:
+            "May and late September offer the strongest value mix.",
+          confidence: 82,
+          airlines: [
+            "Iberia",
+            "American",
+            "Air Europa",
+            "TAP Air Portugal"
+          ],
+          airlineFactors: [
+            0.94,
+            1.03,
+            0.91,
+            0.85
+          ],
+          hotels: [
+            "Meliá",
+            "Marriott",
+            "Hilton",
+            "NH Hotels"
+          ],
+          hotelFactors: [
+            0.93,
+            1.13,
+            1.06,
+            0.79
+          ],
+          seasonality: [
+            0.89,
+            0.91,
+            0.96,
+            1.02,
+            1.10,
+            1.20,
+            1.27,
+            1.24,
+            1.08,
+            0.97,
+            0.92,
+            1.12
+          ]
+        }
+      };
+
+      const MONTHS = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ];
+
+      const currencyFormatter =
+        new Intl.NumberFormat(
+          "en-US",
+          {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 0
+          }
+        );
+
+      const percentFormatter =
+        new Intl.NumberFormat(
+          "en-US",
+          {
+            maximumFractionDigits: 1
+          }
+        );
+
+      const state = {
+        routeKey: "nyc-lon",
+        month: new Date().getMonth(),
+        promoActive: false,
+        darkMode: false
+      };
+
+      const elements = {
+        sidebar:
+          document.getElementById("sidebar"),
+
+        sidebarOverlay:
+          document.getElementById("sidebarOverlay"),
+
+        openSidebar:
+          document.getElementById("openSidebar"),
+
+        closeSidebar:
+          document.getElementById("closeSidebar"),
+
+        routeSelect:
+          document.getElementById("routeSelect"),
+
+        originSelect:
+          document.getElementById("originSelect"),
+
+        destinationSelect:
+          document.getElementById("destinationSelect"),
+
+        monthSelect:
+          document.getElementById("monthSelect"),
+
+        targetFare:
+          document.getElementById("targetFare"),
+
+        targetFareValue:
+          document.getElementById("targetFareValue"),
+
+        alertsToggle:
+          document.getElementById("alertsToggle"),
+
+        simulateBtn:
+          document.getElementById("simulateBtn"),
+
+        simulateBtnLabel:
+          document.getElementById("simulateBtnLabel"),
+
+        simulateBtnSubtext:
+          document.getElementById("simulateBtnSubtext"),
+
+        themeToggle:
+          document.getElementById("themeToggle"),
+
+        sunIcon:
+          document.getElementById("sunIcon"),
+
+        moonIcon:
+          document.getElementById("moonIcon"),
+
+        headerRouteBadge:
+          document.getElementById("headerRouteBadge"),
+
+        lastUpdated:
+          document.getElementById("lastUpdated"),
+
+        heroRoute:
+          document.getElementById("heroRoute"),
+
+        heroMeta:
+          document.getElementById("heroMeta"),
+
+        heroMonthBadge:
+          document.getElementById("heroMonthBadge"),
+
+        marketStatus:
+          document.getElementById("marketStatus"),
+
+        forecastConfidence:
+          document.getElementById("forecastConfidence"),
+
+        heroRecommendation:
+          document.getElementById("heroRecommendation"),
+
+        heroSavingsLabel:
+          document.getElementById("heroSavingsLabel"),
+
+        heroSavings:
+          document.getElementById("heroSavings"),
+
+        heroSavingsDetail:
+          document.getElementById("heroSavingsDetail"),
+
+        lowestFlight:
+          document.getElementById("lowestFlight"),
+
+        flightDelta:
+          document.getElementById("flightDelta"),
+
+        flightSignal:
+          document.getElementById("flightSignal"),
+
+        avgHotel:
+          document.getElementById("avgHotel"),
+
+        hotelDelta:
+          document.getElementById("hotelDelta"),
+
+        bookingWindow:
+          document.getElementById("bookingWindow"),
+
+        bookingHint:
+          document.getElementById("bookingHint"),
+
+        alertIcon:
+          document.getElementById("alertIcon"),
+
+        alertStateBadge:
+          document.getElementById("alertStateBadge"),
+
+        alertStatus:
+          document.getElementById("alertStatus"),
+
+        alertDetail:
+          document.getElementById("alertDetail"),
+
+        trendRouteLabel:
+          document.getElementById("trendRouteLabel"),
+
+        trendSubtitle:
+          document.getElementById("trendSubtitle"),
+
+        airlineLowest:
+          document.getElementById("airlineLowest"),
+
+        hotelLowest:
+          document.getElementById("hotelLowest"),
+
+        optimalDays:
+          document.getElementById("optimalDays"),
+
+        volatilityLevel:
+          document.getElementById("volatilityLevel"),
+
+        insightText:
+          document.getElementById("insightText"),
+
+        toast:
+          document.getElementById("toast"),
+
+        toastTitle:
+          document.getElementById("toastTitle"),
+
+        toastMessage:
+          document.getElementById("toastMessage")
+      };
+
+      const charts = {
+        trend: null,
+        supplier: null,
+        departure: null
+      };
+
+      let currentData = null;
+      let toastTimer = null;
+
+      function formatCurrency(value) {
+        return currencyFormatter.format(
+          Math.round(value)
+        );
+      }
+
+      function hashString(value) {
+        let hash = 2166136261;
+
+        for (
+          let index = 0;
+          index < value.length;
+          index += 1
+        ) {
+          hash ^= value.charCodeAt(index);
+          hash = Math.imul(
+            hash,
+            16777619
+          );
+        }
+
+        return hash >>> 0;
+      }
+
+      function mulberry32(seed) {
+        return function random() {
+          let value =
+            (seed += 0x6d2b79f5);
+
+          value =
+            Math.imul(
+              value ^ (value >>> 15),
+              value | 1
+            );
+
+          value ^=
+            value +
+            Math.imul(
+              value ^ (value >>> 7),
+              value | 61
+            );
+
+          return (
+            (
+              (value ^ (value >>> 14)) >>> 0
+            ) / 4294967296
+          );
+        };
+      }
+
+      function average(values) {
+        return (
+          values.reduce(
+            (sum, value) => sum + value,
+            0
+          ) / values.length
+        );
+      }
+
+      function standardDeviation(values) {
+        const mean =
+          average(values);
+
+        const variance =
+          values.reduce(
+            (sum, value) =>
+              sum +
+              Math.pow(
+                value - mean,
+                2
+              ),
+            0
+          ) / values.length;
+
+        return Math.sqrt(variance);
+      }
+
+      function clamp(
+        value,
+        minimum,
+        maximum
+      ) {
+        return Math.min(
+          Math.max(
+            value,
+            minimum
+          ),
+          maximum
+        );
+      }
+
+      function currentRoute() {
+        return ROUTES[state.routeKey];
+      }
+
+      function initializeControls() {
+        Object.entries(
+          ROUTES
+        ).forEach(
+          ([key, route]) => {
+            const option =
+              document.createElement(
+                "option"
+              );
+
+            option.value = key;
+            option.textContent =
+              route.label;
+
+            elements.routeSelect.appendChild(
+              option
+            );
+          }
+        );
+
+        Object.entries(
+          ROUTES
+        ).forEach(
+          ([key, route]) => {
+            const option =
+              document.createElement(
+                "option"
+              );
+
+            option.value = key;
+            option.textContent =
+              route.origin.code;
+
+            option.title =
+              route.origin.city;
+
+            elements.originSelect.appendChild(
+              option
+            );
+          }
+        );
+
+        Object.entries(
+          ROUTES
+        ).forEach(
+          ([key, route]) => {
+            const option =
+              document.createElement(
+                "option"
+              );
+
+            option.value = key;
+            option.textContent =
+              route.destination.code;
+
+            option.title =
+              route.destination.city;
+
+            elements.destinationSelect.appendChild(
+              option
+            );
+          }
+        );
+
+        MONTHS.forEach(
+          (month, index) => {
+            const option =
+              document.createElement(
+                "option"
+              );
+
+            option.value =
+              String(index);
+
+            option.textContent =
+              month;
+
+            elements.monthSelect.appendChild(
+              option
+            );
+          }
+        );
+
+        elements.routeSelect.value =
+          state.routeKey;
+
+        elements.originSelect.value =
+          state.routeKey;
+
+        elements.destinationSelect.value =
+          state.routeKey;
+
+        elements.monthSelect.value =
+          String(state.month);
+      }
+
+      function configureTargetFare() {
+        const route =
+          currentRoute();
+
+        const seasonalFactor =
+          route.seasonality[
+            state.month
+          ];
+
+        const baseline =
+          route.baseFlight *
+          seasonalFactor;
+
+        const minimum =
+          Math.round(
+            (
+              baseline *
+              0.52
+            ) / 10
+          ) * 10;
+
+        const maximum =
+          Math.round(
+            (
+              baseline *
+              1.18
+            ) / 10
+          ) * 10;
+
+        const target =
+          Math.round(
+            (
+              route.alertTarget *
+              seasonalFactor
+            ) / 10
+          ) * 10;
+
+        elements.targetFare.min =
+          String(minimum);
+
+        elements.targetFare.max =
+          String(maximum);
+
+        elements.targetFare.value =
+          String(
+            clamp(
+              target,
+              minimum,
+              maximum
+            )
+          );
+
+        updateTargetFareLabel();
+      }
+
+      function updateTargetFareLabel() {
+        elements.targetFareValue.textContent =
+          formatCurrency(
+            Number(
+              elements.targetFare.value
+            )
+          );
+      }
+
+      function syncRouteControls() {
+        elements.routeSelect.value =
+          state.routeKey;
+
+        elements.originSelect.value =
+          state.routeKey;
+
+        elements.destinationSelect.value =
+          state.routeKey;
+      }
+
+      function generateDashboardData() {
+        const route =
+          currentRoute();
+
+        const seasonalFactor =
+          route.seasonality[
+            state.month
+          ];
+
+        const flightBaseline =
+          route.baseFlight *
+          seasonalFactor;
+
+        const hotelBaseline =
+          route.baseHotel *
+          seasonalFactor;
+
+        const random =
+          mulberry32(
+            hashString(
+              `${state.routeKey}-${state.month}-${state.promoActive ? "promo" : "standard"}`
+            )
+          );
+
+        const labels = [];
+        const flightTrend = [];
+        const hotelTrend = [];
+
+        const now =
+          new Date();
+
+        for (
+          let index = 0;
+          index < 30;
+          index += 1
+        ) {
+          const date =
+            new Date(now);
+
+          date.setDate(
+            now.getDate() -
+            (29 - index)
+          );
+
+          labels.push(
+            date.toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                day: "numeric"
+              }
+            )
+          );
+
+          const weekendAdjustment =
+            date.getDay() === 5 ||
+            date.getDay() === 6
+              ? 0.035
+              : 0;
+
+          const flightWave =
+            Math.sin(
+              index * 0.62
+            ) * 0.045 +
+            Math.cos(
+              index * 0.22
+            ) * 0.026;
+
+          const hotelWave =
+            Math.cos(
+              index * 0.48
+            ) * 0.038 +
+            Math.sin(
+              index * 0.18
+            ) * 0.021;
+
+          const flightNoise =
+            (random() - 0.5) *
+            0.065;
+
+          const hotelNoise =
+            (random() - 0.5) *
+            0.052;
+
+          let flightPromoFactor = 1;
+          let hotelPromoFactor = 1;
+
+          if (
+            state.promoActive
+          ) {
+            flightPromoFactor =
+              index < 18
+                ? 0.94
+                : 0.76;
+
+            hotelPromoFactor =
+              index < 18
+                ? 0.97
+                : 0.87;
+          }
+
+          const flightPrice =
+            flightBaseline *
+            (
+              1 +
+              flightWave +
+              flightNoise +
+              weekendAdjustment
+            ) *
+            flightPromoFactor;
+
+          const hotelPrice =
+            hotelBaseline *
+            (
+              1 +
+              hotelWave +
+              hotelNoise +
+              weekendAdjustment *
+                0.55
+            ) *
+            hotelPromoFactor;
+
+          flightTrend.push(
+            Math.round(
+              flightPrice
+            )
+          );
+
+          hotelTrend.push(
+            Math.round(
+              hotelPrice
+            )
+          );
+        }
+
+        const supplierFlightFactor =
+          state.promoActive
+            ? 0.79
+            : 1;
+
+        const supplierHotelFactor =
+          state.promoActive
+            ? 0.89
+            : 1;
+
+        const airlinePrices =
+          route.airlineFactors.map(
+            factor =>
+              Math.round(
+                flightBaseline *
+                factor *
+                supplierFlightFactor *
+                (
+                  0.98 +
+                  random() *
+                    0.05
+                )
+              )
+          );
+
+        const hotelPrices =
+          route.hotelFactors.map(
+            factor =>
+              Math.round(
+                hotelBaseline *
+                factor *
+                supplierHotelFactor *
+                (
+                  0.98 +
+                  random() *
+                    0.05
+                )
+              )
+          );
+
+        const departureDays = [
+          7,
+          12,
+          18,
+          25,
+          33,
+          42,
+          52,
+          65,
+          80,
+          100,
+          125,
+          150,
+          180
+        ];
+
+        const departurePoints =
+          departureDays.map(
+            days => {
+              let timingFactor;
+
+              if (
+                days <= 10
+              ) {
+                timingFactor =
+                  1.42;
+              } else if (
+                days <= 20
+              ) {
+                timingFactor =
+                  1.25;
+              } else if (
+                days <= 35
+              ) {
+                timingFactor =
+                  1.04;
+              } else if (
+                days <= 60
+              ) {
+                timingFactor =
+                  0.87 +
+                  Math.abs(
+                    days - 51
+                  ) *
+                    0.0024;
+              } else if (
+                days <= 90
+              ) {
+                timingFactor =
+                  0.94 +
+                  (
+                    days - 60
+                  ) *
+                    0.0016;
+              } else if (
+                days <= 130
+              ) {
+                timingFactor =
+                  1.01 +
+                  (
+                    days - 90
+                  ) *
+                    0.0009;
+              } else {
+                timingFactor =
+                  1.06 +
+                  (
+                    days - 130
+                  ) *
+                    0.0011;
+              }
+
+              const promotionFactor =
+                state.promoActive
+                  ? 0.78
+                  : 1;
+
+              const volatility =
+                Math.round(
+                  5 +
+                  random() *
+                    7
+                );
+
+              const noise =
+                0.975 +
+                random() *
+                  0.055;
+
+              return {
+                x: days,
+
+                y:
+                  Math.round(
+                    flightBaseline *
+                    timingFactor *
+                    promotionFactor *
+                    noise
+                  ),
+
+                r: volatility
+              };
+            }
+          );
+
+        const lowestFlight =
+          Math.min(
+            ...flightTrend
+          );
+
+        const averageHotel =
+          Math.round(
+            average(
+              hotelTrend
+            )
+          );
+
+        const optimalPoint =
+          departurePoints.reduce(
+            (
+              lowest,
+              point
+            ) =>
+              point.y <
+              lowest.y
+                ? point
+                : lowest
+          );
+
+        const volatilityPercent =
+          (
+            standardDeviation(
+              flightTrend
+            ) /
+            average(
+              flightTrend
+            )
+          ) *
+          100;
+
+        const lowestAirlineIndex =
+          airlinePrices.indexOf(
+            Math.min(
+              ...airlinePrices
+            )
+          );
+
+        const lowestHotelIndex =
+          hotelPrices.indexOf(
+            Math.min(
+              ...hotelPrices
+            )
+          );
+
+        return {
+          labels,
+          flightTrend,
+          hotelTrend,
+          airlinePrices,
+          hotelPrices,
+          departurePoints,
+          lowestFlight,
+          averageHotel,
+          optimalPoint,
+          volatilityPercent,
+          lowestAirlineIndex,
+          lowestHotelIndex,
+          flightBaseline,
+          hotelBaseline
+        };
+      }
+
+      function renderMetrics(
+        data
+      ) {
+        const route =
+          currentRoute();
+
+        const targetFare =
+          Number(
+            elements.targetFare.value
+          );
+
+        const alertsEnabled =
+          elements.alertsToggle.checked;
+
+        const flightDifference =
+          (
+            (
+              data.lowestFlight -
+              data.flightBaseline
+            ) /
+            data.flightBaseline
+          ) *
+          100;
+
+        const hotelDifference =
+          (
+            (
+              data.averageHotel -
+              data.hotelBaseline
+            ) /
+            data.hotelBaseline
+          ) *
+          100;
+
+        const estimatedSavings =
+          Math.max(
+            0,
+            Math.round(
+              data.flightBaseline -
+              data.lowestFlight
+            )
+          );
+
+        elements.headerRouteBadge.textContent =
+          `${route.origin.code} → ${route.destination.code}`;
+
+        elements.heroRoute.textContent =
+          `${route.origin.city} to ${route.destination.city}`;
+
+        elements.heroMeta.textContent =
+          `${route.origin.code} → ${route.destination.code} · ${route.region} · Economy flight + 4-star hotel`;
+
+        elements.heroMonthBadge.textContent =
+          `${MONTHS[state.month]} travel`;
+
+        elements.forecastConfidence.textContent =
+          `High · ${route.confidence}%`;
+
+        elements.lowestFlight.textContent =
+          formatCurrency(
+            data.lowestFlight
+          );
+
+        elements.avgHotel.textContent =
+          formatCurrency(
+            data.averageHotel
+          );
+
+        elements.bookingWindow.textContent =
+          route.bookingWindow;
+
+        elements.bookingHint.textContent =
+          route.bookingHint;
+
+        elements.trendRouteLabel.textContent =
+          `${route.origin.code} → ${route.destination.code}`;
+
+        elements.trendSubtitle.textContent =
+          `${MONTHS[state.month]} pricing model · 30-day observed market signal`;
+
+        if (
+          flightDifference <=
+          -12
+        ) {
+          elements.flightSignal.textContent =
+            "Excellent";
+
+          elements.flightDelta.textContent =
+            `${Math.abs(
+              Math.round(
+                flightDifference
+              )
+            )}% below baseline`;
+        } else if (
+          flightDifference <=
+          -4
+        ) {
+          elements.flightSignal.textContent =
+            "Good value";
+
+          elements.flightDelta.textContent =
+            `${Math.abs(
+              Math.round(
+                flightDifference
+              )
+            )}% below baseline`;
+        } else if (
+          flightDifference <
+          5
+        ) {
+          elements.flightSignal.textContent =
+            "Typical";
+
+          elements.flightDelta.textContent =
+            "Near seasonal baseline";
+        } else {
+          elements.flightSignal.textContent =
+            "Elevated";
+
+          elements.flightDelta.textContent =
+            `${Math.round(
+              flightDifference
+            )}% above baseline`;
+        }
+
+        if (
+          hotelDifference <=
+          -7
+        ) {
+          elements.hotelDelta.textContent =
+            `${Math.abs(
+              Math.round(
+                hotelDifference
+              )
+            )}% below monthly baseline`;
+        } else if (
+          hotelDifference >=
+          7
+        ) {
+          elements.hotelDelta.textContent =
+            `${Math.round(
+              hotelDifference
+            )}% above monthly baseline`;
+        } else {
+          elements.hotelDelta.textContent =
+            "Near the 4-star market average";
+        }
+
+        if (
+          !alertsEnabled
+        ) {
+          elements.alertStatus.textContent =
+            "Paused";
+
+          elements.alertDetail.textContent =
+            `Enable alerts to monitor fares below ${formatCurrency(
+              targetFare
+            )}.`;
+
+          elements.alertStateBadge.innerHTML =
+            '<span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span> Paused';
+
+          elements.alertStateBadge.className =
+            "flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300";
+        } else if (
+          data.lowestFlight <=
+          targetFare
+        ) {
+          const amountBelow =
+            targetFare -
+            data.lowestFlight;
+
+          elements.alertStatus.textContent =
+            "Deal found";
+
+          elements.alertDetail.textContent =
+            `${formatCurrency(
+              amountBelow
+            )} below your ${formatCurrency(
+              targetFare
+            )} target.`;
+
+          elements.alertStateBadge.innerHTML =
+            '<span class="status-pulse h-1.5 w-1.5 rounded-full bg-emerald-500 text-emerald-500"></span> Triggered';
+
+          elements.alertStateBadge.className =
+            "flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300";
+        } else {
+          const amountAbove =
+            data.lowestFlight -
+            targetFare;
+
+          elements.alertStatus.textContent =
+            "Monitoring";
+
+          elements.alertDetail.textContent =
+            `${formatCurrency(
+              amountAbove
+            )} above your ${formatCurrency(
+              targetFare
+            )} target.`;
+
+          elements.alertStateBadge.innerHTML =
+            '<span class="status-pulse h-1.5 w-1.5 rounded-full bg-blue-500 text-blue-500"></span> Active';
+
+          elements.alertStateBadge.className =
+            "flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-blue-700 dark:bg-blue-400/10 dark:text-blue-300";
+        }
+
+        if (
+          state.promoActive
+        ) {
+          elements.marketStatus.innerHTML =
+            '<span class="status-pulse h-2 w-2 rounded-full bg-emerald-300 text-emerald-300"></span> Promotional fare detected';
+
+          elements.heroRecommendation.textContent =
+            data.lowestFlight <=
+            targetFare
+              ? "Book this fare"
+              : "Review the new offer";
+
+          elements.heroSavingsLabel.textContent =
+            "Promotional savings";
+
+          elements.heroSavings.textContent =
+            formatCurrency(
+              estimatedSavings
+            );
+
+          elements.heroSavingsDetail.textContent =
+            "Simulated promotional inventory is now reflected across the dashboard.";
+        } else {
+          elements.marketStatus.innerHTML =
+            '<span class="status-pulse h-2 w-2 rounded-full bg-teal-300 text-teal-300"></span> Monitoring market prices';
+
+          if (
+            data.lowestFlight <=
+            targetFare
+          ) {
+            elements.heroRecommendation.textContent =
+              "Consider booking now";
+          } else if (
+            data.volatilityPercent >
+            9
+          ) {
+            elements.heroRecommendation.textContent =
+              "Watch closely for 24 hours";
+          } else {
+            elements.heroRecommendation.textContent =
+              "Watch for 48 hours";
+          }
+
+          elements.heroSavingsLabel.textContent =
+            "Potential savings";
+
+          elements.heroSavings.textContent =
+            formatCurrency(
+              estimatedSavings
+            );
+
+          elements.heroSavingsDetail.textContent =
+            "Compared with the seasonal route baseline for your selected month.";
+        }
+
+        const routeAirline =
+          route.airlines[
+            data.lowestAirlineIndex
+          ];
+
+        const routeHotel =
+          route.hotels[
+            data.lowestHotelIndex
+          ];
+
+        elements.airlineLowest.textContent =
+          `${routeAirline} · ${formatCurrency(
+            data.airlinePrices[
+              data.lowestAirlineIndex
+            ]
+          )}`;
+
+        elements.hotelLowest.textContent =
+          `${routeHotel} · ${formatCurrency(
+            data.hotelPrices[
+              data.lowestHotelIndex
+            ]
+          )}`;
+
+        elements.optimalDays.textContent =
+          `${data.optimalPoint.x} days before departure`;
+
+        let volatilityLabel;
+        let volatilityInsight;
+
+        if (
+          data.volatilityPercent <
+          6.5
+        ) {
+          volatilityLabel =
+            "Low";
+
+          volatilityInsight =
+            "Pricing is relatively stable, so immediate action is less urgent.";
+        } else if (
+          data.volatilityPercent <
+          9.5
+        ) {
+          volatilityLabel =
+            "Moderate";
+
+          volatilityInsight =
+            "Fares are moving, but no severe demand spike is present.";
+        } else {
+          volatilityLabel =
+            "High";
+
+          volatilityInsight =
+            "Prices are changing quickly; tighter monitoring is recommended.";
+        }
+
+        elements.volatilityLevel.textContent =
+          `${volatilityLabel} · ${percentFormatter.format(
+            data.volatilityPercent
+          )}%`;
+
+        elements.insightText.textContent =
+          volatilityInsight;
+
+        elements.lastUpdated.textContent =
+          `Updated ${new Date().toLocaleTimeString(
+            "en-US",
+            {
+              hour: "numeric",
+              minute: "2-digit"
+            }
+          )} · ${MONTHS[state.month]} pricing model`;
+      }
+
+      function getChartPalette() {
+        const dark =
+          document.documentElement.classList.contains(
+            "dark"
+          );
+
+        return {
+          text:
+            dark
+              ? "#cbd5e1"
+              : "#475569",
+
+          muted:
+            dark
+              ? "#94a3b8"
+              : "#64748b",
+
+          grid:
+            dark
+              ? "rgba(148, 163, 184, 0.12)"
+              : "rgba(148, 163, 184, 0.18)",
+
+          tooltip:
+            dark
+              ? "rgba(2, 6, 23, 0.98)"
+              : "rgba(7, 17, 31, 0.96)"
+        };
+      }
+
+      function destroyCharts() {
+        Object.keys(
+          charts
+        ).forEach(
+          key => {
+            if (
+              charts[key]
+            ) {
+              charts[key].destroy();
+              charts[key] = null;
+            }
+          }
+        );
+      }
+
+      function renderCharts(
+        data
+      ) {
+        destroyCharts();
+
+        const route =
+          currentRoute();
+
+        const palette =
+          getChartPalette();
+
+        Chart.defaults.font.family =
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+        Chart.defaults.color =
+          palette.text;
+
+        const trendCanvas =
+          document.getElementById(
+            "trendChart"
+          );
+
+        const supplierCanvas =
+          document.getElementById(
+            "supplierChart"
+          );
+
+        const departureCanvas =
+          document.getElementById(
+            "departureChart"
+          );
+
+        const trendContext =
+          trendCanvas.getContext(
+            "2d"
+          );
+
+        const flightGradient =
+          trendContext.createLinearGradient(
+            0,
+            0,
+            0,
+            360
+          );
+
+        flightGradient.addColorStop(
+          0,
+          "rgba(20, 170, 167, 0.28)"
+        );
+
+        flightGradient.addColorStop(
+          1,
+          "rgba(20, 170, 167, 0.01)"
+        );
+
+        charts.trend =
+          new Chart(
+            trendContext,
+            {
+              type: "line",
+
+              data: {
+                labels:
+                  data.labels,
+
+                datasets: [
+                  {
+                    label:
+                      "Flight fare",
+
+                    data:
+                      data.flightTrend,
+
+                    yAxisID:
+                      "flightAxis",
+
+                    borderColor:
+                      "#14aaa7",
+
+                    backgroundColor:
+                      flightGradient,
+
+                    borderWidth:
+                      3,
+
+                    pointRadius:
+                      0,
+
+                    pointHoverRadius:
+                      5,
+
+                    fill:
+                      true,
+
+                    tension:
+                      0.38
+                  },
+
+                  {
+                    label:
+                      "Hotel nightly rate",
+
+                    data:
+                      data.hotelTrend,
+
+                    yAxisID:
+                      "hotelAxis",
+
+                    borderColor:
+                      "#8b5cf6",
+
+                    backgroundColor:
+                      "rgba(139, 92, 246, 0.10)",
+
+                    borderWidth:
+                      2.5,
+
+                    borderDash:
+                      [
+                        7,
+                        5
+                      ],
+
+                    pointRadius:
+                      0,
+
+                    pointHoverRadius:
+                      5,
+
+                    fill:
+                      false,
+
+                    tension:
+                      0.38
+                  }
+                ]
+              },
+
+              options: {
+                responsive:
+                  true,
+
+                maintainAspectRatio:
+                  false,
+
+                interaction: {
+                  mode:
+                    "index",
+
+                  intersect:
+                    false
+                },
+
+                plugins: {
+                  legend: {
+                    display:
+                      false
+                  },
+
+                  tooltip: {
+                    backgroundColor:
+                      palette.tooltip,
+
+                    callbacks: {
+                      label(
+                        context
+                      ) {
+                        return `${context.dataset.label}: ${formatCurrency(
+                          context.parsed.y
+                        )}`;
+                      }
+                    }
+                  }
+                },
+
+                scales: {
+                  x: {
+                    grid: {
+                      display:
+                        false
+                    },
+
+                    border: {
+                      display:
+                        false
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      maxTicksLimit:
+                        8,
+
+                      maxRotation:
+                        0
+                    }
+                  },
+
+                  flightAxis: {
+                    position:
+                      "left",
+
+                    border: {
+                      display:
+                        false
+                    },
+
+                    grid: {
+                      color:
+                        palette.grid
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      callback(
+                        value
+                      ) {
+                        return `$${value}`;
+                      }
+                    }
+                  },
+
+                  hotelAxis: {
+                    position:
+                      "right",
+
+                    border: {
+                      display:
+                        false
+                    },
+
+                    grid: {
+                      drawOnChartArea:
+                        false
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      callback(
+                        value
+                      ) {
+                        return `$${value}`;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          );
+
+        const supplierLabels = [
+          ...route.airlines,
+          ...route.hotels
+        ];
+
+        const flightSupplierData = [
+          ...data.airlinePrices,
+          ...route.hotels.map(
+            () => null
+          )
+        ];
+
+        const hotelSupplierData = [
+          ...route.airlines.map(
+            () => null
+          ),
+          ...data.hotelPrices
+        ];
+
+        charts.supplier =
+          new Chart(
+            supplierCanvas.getContext(
+              "2d"
+            ),
+            {
+              type:
+                "bar",
+
+              data: {
+                labels:
+                  supplierLabels,
+
+                datasets: [
+                  {
+                    label:
+                      "Airline fare",
+
+                    data:
+                      flightSupplierData,
+
+                    backgroundColor:
+                      "rgba(20, 170, 167, 0.82)",
+
+                    borderColor:
+                      "#14aaa7",
+
+                    borderWidth:
+                      1,
+
+                    borderRadius:
+                      9
+                  },
+
+                  {
+                    label:
+                      "Hotel nightly rate",
+
+                    data:
+                      hotelSupplierData,
+
+                    backgroundColor:
+                      "rgba(139, 92, 246, 0.78)",
+
+                    borderColor:
+                      "#8b5cf6",
+
+                    borderWidth:
+                      1,
+
+                    borderRadius:
+                      9
+                  }
+                ]
+              },
+
+              options: {
+                responsive:
+                  true,
+
+                maintainAspectRatio:
+                  false,
+
+                plugins: {
+                  legend: {
+                    position:
+                      "bottom",
+
+                    labels: {
+                      color:
+                        palette.text,
+
+                      usePointStyle:
+                        true
+                    }
+                  },
+
+                  tooltip: {
+                    backgroundColor:
+                      palette.tooltip,
+
+                    callbacks: {
+                      label(
+                        context
+                      ) {
+                        return `${context.dataset.label}: ${formatCurrency(
+                          context.parsed.y
+                        )}`;
+                      }
+                    }
+                  }
+                },
+
+                scales: {
+                  x: {
+                    grid: {
+                      display:
+                        false
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      maxRotation:
+                        35,
+
+                      autoSkip:
+                        false
+                    }
+                  },
+
+                  y: {
+                    beginAtZero:
+                      true,
+
+                    grid: {
+                      color:
+                        palette.grid
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      callback(
+                        value
+                      ) {
+                        return `$${value}`;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          );
+
+        charts.departure =
+          new Chart(
+            departureCanvas.getContext(
+              "2d"
+            ),
+            {
+              type:
+                "bubble",
+
+              data: {
+                datasets: [
+                  {
+                    label:
+                      "Modeled flight fare",
+
+                    data:
+                      data.departurePoints,
+
+                    backgroundColor:
+                      "rgba(37, 99, 235, 0.54)",
+
+                    hoverBackgroundColor:
+                      "rgba(20, 170, 167, 0.82)",
+
+                    borderColor:
+                      "rgba(96, 165, 250, 0.95)",
+
+                    borderWidth:
+                      1.5
+                  }
+                ]
+              },
+
+              options: {
+                responsive:
+                  true,
+
+                maintainAspectRatio:
+                  false,
+
+                plugins: {
+                  legend: {
+                    display:
+                      false
+                  },
+
+                  tooltip: {
+                    backgroundColor:
+                      palette.tooltip,
+
+                    callbacks: {
+                      title(
+                        items
+                      ) {
+                        const point =
+                          items[0].raw;
+
+                        return `${point.x} days before departure`;
+                      },
+
+                      label(
+                        context
+                      ) {
+                        const point =
+                          context.raw;
+
+                        return `Modeled fare: ${formatCurrency(
+                          point.y
+                        )}`;
+                      },
+
+                      afterLabel(
+                        context
+                      ) {
+                        const point =
+                          context.raw;
+
+                        return `Volatility score: ${point.r}/12`;
+                      }
+                    }
+                  }
+                },
+
+                scales: {
+                  x: {
+                    min:
+                      0,
+
+                    max:
+                      190,
+
+                    reverse:
+                      true,
+
+                    grid: {
+                      color:
+                        palette.grid
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      callback(
+                        value
+                      ) {
+                        return `${value}d`;
+                      }
+                    },
+
+                    title: {
+                      display:
+                        true,
+
+                      text:
+                        "Days left until departure — departure approaches →",
+
+                      color:
+                        palette.muted
+                    }
+                  },
+
+                  y: {
+                    grid: {
+                      color:
+                        palette.grid
+                    },
+
+                    ticks: {
+                      color:
+                        palette.muted,
+
+                      callback(
+                        value
+                      ) {
+                        return `$${value}`;
+                      }
+                    },
+
+                    title: {
+                      display:
+                        true,
+
+                      text:
+                        "Flight price",
+
+                      color:
+                        palette.muted
+                    }
+                  }
+                }
+              }
+            }
+          );
+      }
+
+      function renderDashboard() {
+        currentData =
+          generateDashboardData();
+
+        renderMetrics(
+          currentData
+        );
+
+        renderCharts(
+          currentData
+        );
+      }
+
+      function updateSimulationButton() {
+        elements.simulateBtn.classList.toggle(
+          "promo-active",
+          state.promoActive
+        );
+
+        if (
+          state.promoActive
+        ) {
+          elements.simulateBtnLabel.textContent =
+            "Restore Standard Prices";
+
+          elements.simulateBtnSubtext.textContent =
+            "Remove the simulated promotional adjustment";
+        } else {
+          elements.simulateBtnLabel.textContent =
+            "Simulate Price Drop";
+
+          elements.simulateBtnSubtext.textContent =
+            "Apply promotional flight and hotel fares";
+        }
+      }
+
+      function showToast(
+        title,
+        message
+      ) {
+        window.clearTimeout(
+          toastTimer
+        );
+
+        elements.toastTitle.textContent =
+          title;
+
+        elements.toastMessage.textContent =
+          message;
+
+        elements.toast.classList.add(
+          "toast-visible"
+        );
+
+        toastTimer =
+          window.setTimeout(
+            () => {
+              elements.toast.classList.remove(
+                "toast-visible"
+              );
+            },
+            3400
+          );
+      }
+
+      function setRoute(
+        routeKey,
+        showNotification = true
+      ) {
+        if (
+          !ROUTES[
+            routeKey
+          ]
+        ) {
+          return;
+        }
+
+        state.routeKey =
+          routeKey;
+
+        state.promoActive =
+          false;
+
+        syncRouteControls();
+
+        configureTargetFare();
+
+        updateSimulationButton();
+
+        renderDashboard();
+
+        if (
+          showNotification
+        ) {
+          const route =
+            currentRoute();
+
+          showToast(
+            "Tracked route updated",
+            `${route.origin.city} to ${route.destination.city} is now being analyzed.`
+          );
+        }
+
+        closeMobileSidebar();
+      }
+
+      function applyTheme() {
+        document.documentElement.classList.toggle(
+          "dark",
+          state.darkMode
+        );
+
+        elements.sunIcon.classList.toggle(
+          "hidden",
+          !state.darkMode
+        );
+
+        elements.moonIcon.classList.toggle(
+          "hidden",
+          state.darkMode
+        );
+
+        elements.themeToggle.setAttribute(
+          "aria-label",
+          state.darkMode
+            ? "Switch to light mode"
+            : "Switch to dark mode"
+        );
+
+        try {
+          localStorage.setItem(
+            "emmanuels-travel-pulse-theme",
+            state.darkMode
+              ? "dark"
+              : "light"
+          );
+        } catch (
+          error
+        ) {
+          console.warn(
+            "Theme preference could not be saved."
+          );
+        }
+      }
+
+      function initializeTheme() {
+        let savedTheme =
+          null;
+
+        try {
+          savedTheme =
+            localStorage.getItem(
+              "emmanuels-travel-pulse-theme"
+            );
+        } catch (
+          error
+        ) {
+          savedTheme =
+            null;
+        }
+
+        if (
+          savedTheme ===
+          "dark"
+        ) {
+          state.darkMode =
+            true;
+        } else if (
+          savedTheme ===
+          "light"
+        ) {
+          state.darkMode =
+            false;
+        } else {
+          state.darkMode =
+            window.matchMedia &&
+            window.matchMedia(
+              "(prefers-color-scheme: dark)"
+            ).matches;
+        }
+
+        applyTheme();
+      }
+
+      function openMobileSidebar() {
+        elements.sidebar.classList.add(
+          "sidebar-open"
+        );
+
+        elements.sidebarOverlay.classList.remove(
+          "hidden"
+        );
+
+        document.body.style.overflow =
+          "hidden";
+      }
+
+      function closeMobileSidebar() {
+        elements.sidebar.classList.remove(
+          "sidebar-open"
+        );
+
+        elements.sidebarOverlay.classList.add(
+          "hidden"
+        );
+
+        document.body.style.overflow =
+          "";
+      }
+
+      elements.routeSelect.addEventListener(
+        "change",
+        event => {
+          setRoute(
+            event.target.value
+          );
+        }
+      );
+
+      elements.originSelect.addEventListener(
+        "change",
+        event => {
+          setRoute(
+            event.target.value
+          );
+        }
+      );
+
+      elements.destinationSelect.addEventListener(
+        "change",
+        event => {
+          setRoute(
+            event.target.value
+          );
+        }
+      );
+
+      elements.monthSelect.addEventListener(
+        "change",
+        event => {
+          state.month =
+            Number(
+              event.target.value
+            );
+
+          state.promoActive =
+            false;
+
+          configureTargetFare();
+
+          updateSimulationButton();
+
+          renderDashboard();
+
+          showToast(
+            "Travel month updated",
+            `${MONTHS[state.month]} seasonality is now applied to all pricing models.`
+          );
+        }
+      );
+
+      elements.targetFare.addEventListener(
+        "input",
+        () => {
+          updateTargetFareLabel();
+
+          if (
+            currentData
+          ) {
+            renderMetrics(
+              currentData
+            );
+          }
+        }
+      );
+
+      elements.alertsToggle.addEventListener(
+        "change",
+        () => {
+          if (
+            currentData
+          ) {
+            renderMetrics(
+              currentData
+            );
+          }
+
+          showToast(
+            elements.alertsToggle.checked
+              ? "Price alerts activated"
+              : "Price alerts paused",
+
+            elements.alertsToggle.checked
+              ? `Monitoring fares below ${formatCurrency(
+                  Number(
+                    elements.targetFare.value
+                  )
+                )}.`
+              : "The dashboard will continue updating without triggering an alert."
+          );
+        }
+      );
+
+      elements.simulateBtn.addEventListener(
+        "click",
+        () => {
+          state.promoActive =
+            !state.promoActive;
+
+          updateSimulationButton();
+
+          renderDashboard();
+
+          if (
+            state.promoActive
+          ) {
+            showToast(
+              "Promotional fares detected",
+              "Budget-friendly flight and hotel prices have been applied to the charts."
+            );
+          } else {
+            showToast(
+              "Standard prices restored",
+              "Promotional adjustments have been removed from the market model."
+            );
+          }
+        }
+      );
+
+      elements.themeToggle.addEventListener(
+        "click",
+        () => {
+          state.darkMode =
+            !state.darkMode;
+
+          applyTheme();
+
+          if (
+            currentData
+          ) {
+            renderCharts(
+              currentData
+            );
+          }
+        }
+      );
+
+      elements.openSidebar.addEventListener(
+        "click",
+        openMobileSidebar
+      );
+
+      elements.closeSidebar.addEventListener(
+        "click",
+        closeMobileSidebar
+      );
+
+      elements.sidebarOverlay.addEventListener(
+        "click",
+        closeMobileSidebar
+      );
+
+      document.addEventListener(
+        "keydown",
+        event => {
+          if (
+            event.key ===
+            "Escape"
+          ) {
+            closeMobileSidebar();
+          }
+        }
+      );
+
+      window.addEventListener(
+        "resize",
+        () => {
+          if (
+            window.innerWidth >=
+            1024
+          ) {
+            closeMobileSidebar();
+          }
+        }
+      );
+
+      initializeControls();
+      initializeTheme();
+      configureTargetFare();
+      updateSimulationButton();
+      renderDashboard();
+    })();
+  </script>
+
+</body>
+</html>
+```
